@@ -128,7 +128,7 @@ class SpecSectionProjectCreation extends Component {
 
   renderNextSubSection() {
     if(this.state.subSections.length > this.state.indexToRender) {
-      console.log("rendering section ", this.state.subSections[this.state.indexToRender])
+      console.log('rendering section ', this.state.subSections[this.state.indexToRender])
       this.setState({
         subSectionsRendered : [...this.state.subSectionsRendered, this.state.subSections[this.state.indexToRender]],
         indexToRender : this.state.indexToRender + 1
