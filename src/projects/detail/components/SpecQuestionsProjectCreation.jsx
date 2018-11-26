@@ -46,6 +46,7 @@ class SpecQuestionsProjectCreation extends Component {
   }
 
   componentWillMount() {
+    console.log('SpecQuestionsProjectCreation componentWillMount ', this.props)
     this.props.toggleSectionNext()
     this.setState({
       questions : this.props.questions,
@@ -53,6 +54,7 @@ class SpecQuestionsProjectCreation extends Component {
     })
   }
   componentWillReceiveProps(nextProps) {
+    console.log('SpecQuestionsProjectCreation componentWillReceiveProps ', nextProps.formData)
     this.setState({
       formData : nextProps.formData
     })
@@ -60,10 +62,14 @@ class SpecQuestionsProjectCreation extends Component {
 
   renderNextQuestion() {
     const renderedData = this.state.formData
+    //console.log("render next question", this.state.questionsRendered)
     //Rendering next question
     let nextQuestionIndex = this.state.questionIndex + 1
     if(this.state.questions.length > nextQuestionIndex) {
       const nextQuestion = this.props.questions[nextQuestionIndex]
+      console.log('nextQuestion = ', nextQuestion)
+      console.log('question type dependent = ', nextQuestion.dependent)
+      console.log('question condition = ', nextQuestion.condition)
       if(!nextQuestion.dependent) {
         this.setState({
           questionIndex : nextQuestionIndex,

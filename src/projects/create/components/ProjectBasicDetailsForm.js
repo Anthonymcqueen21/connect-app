@@ -85,6 +85,7 @@ class ProjectBasicDetailsForm extends Component {
   handleChange(change) {
     // removed check for isChanged argument to fire the PROJECT_DIRTY event for every change in the form
     // this.props.fireProjectDirty(change)
+    console.log('change : ', change)
     this.setState({projectFormData : change})
     this.props.onProjectChange(change)
   }

@@ -76,6 +76,7 @@ class SpecSectionProjectCreation extends Component {
   }
 
   shouldComponentUpdate(nextProps, nextState) {
+    console.log(' SpecSectionProjectCreation shouldComponentUpdate : ', nextState.updatedFormData)
     return !(
       _.isEqual(this.state.subSectionsRendered, nextState.subSectionsRendered)
       && _.isEqual(nextState.hideNext, this.state.hideNext)
@@ -113,6 +114,7 @@ class SpecSectionProjectCreation extends Component {
   }
 
   componentWillReceiveProps(nextProps) {
+    console.log('SpecSectionProjectCreation componentWillReceiveProps : ', nextProps.projectFormData)
     this.setState({
       updatedFormData : nextProps.projectFormData
     })
@@ -126,6 +128,7 @@ class SpecSectionProjectCreation extends Component {
 
   renderNextSubSection() {
     if(this.state.subSections.length > this.state.indexToRender) {
+      console.log("rendering section ", this.state.subSections[this.state.indexToRender])
       this.setState({
         subSectionsRendered : [...this.state.subSectionsRendered, this.state.subSections[this.state.indexToRender]],
         indexToRender : this.state.indexToRender + 1
