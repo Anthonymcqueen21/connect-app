@@ -5,7 +5,7 @@ import FormsyForm from 'appirio-tech-react-components/components/Formsy'
 const Formsy = FormsyForm.Formsy
 import './ProjectBasicDetailsForm.scss'
 
-import SpecSection from '../../detail/components/SpecSection'
+import SpecSectionProjectCreation from '../../detail/components/SpecSectionProjectCreation'
 
 class ProjectBasicDetailsForm extends Component {
 
@@ -15,6 +15,11 @@ class ProjectBasicDetailsForm extends Component {
     this.disableButton = this.disableButton.bind(this)
     this.submit = this.submit.bind(this)
     this.handleChange = this.handleChange.bind(this)
+    this.readyToSubmit = this.readyToSubmit.bind(this)
+    this.state = {
+      enableSubmit : false,
+      projectFormData : {}
+    }
   }
 
   shouldComponentUpdate(nextProps, nextState) {
@@ -24,6 +29,8 @@ class ProjectBasicDetailsForm extends Component {
      && _.isEqual(nextState.canSubmit, this.state.canSubmit)
      && _.isEqual(nextProps.sections, this.props.sections)
      && _.isEqual(nextState.isSaving, this.state.isSaving)
+     && _.isEqual(nextState.enableSubmit, this.state.enableSubmit)
+     && _.isEqual(nextState.projectFormData, this.state.projectFormData)
     )
   }
 
@@ -35,6 +42,7 @@ class ProjectBasicDetailsForm extends Component {
   }
 
   componentWillReceiveProps(nextProps) {
+    console.log('ProjectBasicDetailsForm : ', nextProps)
     // we receipt property updates from PROJECT_DIRTY REDUX state
     if (nextProps.project.isDirty) return
     const updatedProject = Object.assign({}, nextProps.project)
@@ -65,6 +73,11 @@ class ProjectBasicDetailsForm extends Component {
     this.props.submitHandler(model)
   }
 
+  readyToSubmit() {
+    console.log('readuy to submit')
+    this.setState({ enableSubmit : true})
+  }
+
   /**
    * Handles the change event of the form.
    *
@@ -74,6 +87,8 @@ class ProjectBasicDetailsForm extends Component {
   handleChange(change) {
     // removed check for isChanged argument to fire the PROJECT_DIRTY event for every change in the form
     // this.props.fireProjectDirty(change)
+    console.log('change : ', change)
+    this.setState({projectFormData : change})
     this.props.onProjectChange(change)
   }
 
@@ -85,7 +100,7 @@ class ProjectBasicDetailsForm extends Component {
       return (
         <div key={idx} className="ProjectBasicDetailsForm">
           <div className="sections">
-            <SpecSection
+            <SpecSectionProjectCreation
               {...section}
               project={project}
               sectionNumber={idx + 1}
@@ -95,13 +110,15 @@ class ProjectBasicDetailsForm extends Component {
               // further, it is not used for this component as we are not rendering spec screen section here
               validate={() => {}}//dummy
               isCreation
+              readyToSubmit={this.readyToSubmit}
+              projectFormData={this.state.projectFormData}
             />
           </div>
-          <div className="section-footer section-footer-spec">
+          {this.state.enableSubmit && <div className="section-footer section-footer-spec">
             <button className="tc-btn tc-btn-primary tc-btn-md"
               type="submit" disabled={(this.state.isSaving) || !canSubmit}
             >{ submitBtnText }</button>
-          </div>
+          </div>}
         </div>
       )
     }
