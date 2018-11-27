@@ -143,6 +143,18 @@ const SpecSection = props => {
           showHidden={showHidden}
         />
       )
+    case 'questions-with-cascade':
+      return (
+        <SpecQuestions
+          showFeaturesDialog={showFeaturesDialog}
+          resetFeatures={resetFeatures}
+          questions={props.questions}
+          project={project}
+          dirtyProject={dirtyProject}
+          isRequired={props.required}
+          showHidden={showHidden}
+        />
+      )
     case 'notes':
       return (
         <div>

@@ -1,3 +1,5 @@
+import _ from 'lodash'
+
 /**
  * Stack datastructure to perform required operations - 
  * push, pop, peek, empty to perform arithmatic/logical operaitons
@@ -104,7 +106,7 @@ const allowedOps = ['+', '-', '*', '/', '==', '&&', '||', '>', '<', 'contains']
  * @returns true, if the expression evaluates to true otherwise false
  * 
  */
-export function evaluate(expression, data) { 
+export function evaluate(expression, data) {
   const tokens = expression.split(' ')
 
   // Stack for operands: 'values' 
@@ -141,7 +143,7 @@ export function evaluate(expression, data) {
       //console.log(tokens[i])
       if(tokens[i] in data) {
         //console.log("val : ",data[tokens[i]])
-        values.push(data[tokens[i]])
+        values.push(_.get(data, tokens[i]))
       } else {
         /*if(tokens[i] == "true")
         values.push(true);
@@ -150,7 +152,8 @@ export function evaluate(expression, data) {
         if(!isNaN(tokens[i]))
           values.push(parseInt(tokens[i]))
         else
-          values.push(tokens[i])
+          //removing single quotes around the text values
+          values.push(tokens[i].replace(/'/g, ''))
       }
     }
   }

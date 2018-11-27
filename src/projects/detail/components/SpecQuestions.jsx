@@ -4,12 +4,14 @@ import seeAttachedWrapperField from './SeeAttachedWrapperField'
 import FormsyForm from 'appirio-tech-react-components/components/Formsy'
 const TCFormFields = FormsyForm.Fields
 import _ from 'lodash'
+import flatten from 'flat'
 
 import SpecQuestionList from './SpecQuestionList/SpecQuestionList'
 import SpecQuestionIcons from './SpecQuestionList/SpecQuestionIcons'
 import SpecFeatureQuestion from './SpecFeatureQuestion'
 import ColorSelector from './../../../components/ColorSelector/ColorSelector'
 import SelectDropdown from './../../../components/SelectDropdown/SelectDropdown'
+import {evaluate} from './../../../helpers/dependentQuestionsHelper.js'
 
 // HOC for TextareaInput
 const SeeAttachedTextareaInput = seeAttachedWrapperField(TCFormFields.Textarea)
@@ -174,10 +176,16 @@ const SpecQuestions = ({questions, project, dirtyProject, resetFeatures, showFea
       </SpecQuestionList.Item>
     )
   }
-
+  //flattening the project data with arrays preserved
+  const flattenProjectData = flatten(project, { safe: true })
+  const filteredQuestions = questions.filter((question) => (
+    //if question is dependent and value not evaluates to false don't render
+    ((!question.dependent) || (question.dependent && evaluate(question.condition, flattenProjectData))) && 
+    (showHidden || !question.hidden)
+  ))
   return (
     <SpecQuestionList>
-      {questions.filter((question) => showHidden || !question.hidden).map(renderQ)}
+      {filteredQuestions.map(renderQ)}
     </SpecQuestionList>
   )
 }
