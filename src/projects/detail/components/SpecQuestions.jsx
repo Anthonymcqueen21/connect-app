@@ -1,5 +1,6 @@
 import React from 'react'
 import PropTypes from 'prop-types'
+import uncontrollable from 'uncontrollable'
 import seeAttachedWrapperField from './SeeAttachedWrapperField'
 import FormsyForm from 'appirio-tech-react-components/components/Formsy'
 const TCFormFields = FormsyForm.Fields
@@ -32,9 +33,24 @@ const getIcon = icon => {
 }
 
 // { isRequired, represents the overall questions section's compulsion, is also available}
-const SpecQuestions = ({questions, project, dirtyProject, resetFeatures, showFeaturesDialog, showHidden }) => {
+const SpecQuestions = ({
+  questions,
+  project,
+  dirtyProject,
+  resetFeatures,
+  showFeaturesDialog,
+  showHidden,
+  renderedQuestion,
+  wizard,
+  isNextHidden,
+  hideNext,
+  onNext,
+  onQuestionsComplete,
+  projectFormData
+  }) => {
 
   const renderQ = (q, index) => {
+    console.log(project)
     // let child = null
     // const value =
     const elemProps = {
@@ -176,17 +192,48 @@ const SpecQuestions = ({questions, project, dirtyProject, resetFeatures, showFea
       </SpecQuestionList.Item>
     )
   }
+
+  console.log(renderedQuestion, 'renderedQuestion')
+  const currentQuestionIdx = !isNaN(renderedQuestion) ? renderedQuestion : 0
   //flattening the project data with arrays preserved
-  const flattenProjectData = flatten(project, { safe: true })
-  const filteredQuestions = questions.filter((question) => (
+  const flattenProjectData = projectFormData ? projectFormData : flatten(project, { safe: true })
+  console.log(projectFormData)
+  const filteredQuestions = questions.filter((question, idx) => (
     //if question is dependent and value not evaluates to false don't render
-    ((!question.dependent) || (question.dependent && evaluate(question.condition, flattenProjectData))) && 
+    ((!question.condition) || (question.condition && evaluate(question.condition, flattenProjectData))) && 
     (showHidden || !question.hidden)
-  ))
+  )).filter((question, idx) => ((!wizard || currentQuestionIdx ===  idx)))
+  console.log(filteredQuestions)
+
+  const renderNextQuestion = () => {
+    const filteredQuestions = questions.filter((question, idx) => (
+      //if question is dependent and value not evaluates to false don't render
+      ((!question.condition) || (question.condition && evaluate(question.condition, flattenProjectData))) && 
+      (showHidden || !question.hidden)
+    ))
+    if (filteredQuestions) {
+      if (currentQuestionIdx < filteredQuestions.length - 1) {
+        console.log('Moving to next question')
+        onNext(currentQuestionIdx + 1)
+      } else { // on last question
+        onQuestionsComplete()
+        hideNext(true)
+      }
+    }
+  }
   return (
-    <SpecQuestionList>
-      {filteredQuestions.map(renderQ)}
-    </SpecQuestionList>
+    <div>
+      <SpecQuestionList>
+        {filteredQuestions.map(renderQ)}
+      </SpecQuestionList>
+      {wizard && !isNextHidden && <div className="section-footer section-footer-spec">
+        <button
+          className="tc-btn tc-btn-primary tc-btn-md"
+          type="button"
+          onClick={ renderNextQuestion }
+        >Next Question</button>
+      </div>}
+    </div>
   )
 }
 
@@ -213,9 +260,23 @@ SpecQuestions.propTypes = {
    */
   questions: PropTypes.arrayOf(PropTypes.object).isRequired,
   /**
+   * Specific question to be rendered. Used in only wizard mode.
+   */
+  renderedQuestion: PropTypes.number,
+  /**
+   * Flag to indicate the wizard mode where we render questions one by one.
+   */
+  wizard: PropTypes.bool,
+  /**
    * If true, then `hidden` property of questions will be ignored and hidden questions will be rendered
    */
   showHidden: PropTypes.bool,
+  onNext: PropTypes.func,
+  onQuestionsComplete: PropTypes.func,
 }
+const SpecQuestionsUncontrollable = uncontrollable(SpecQuestions, {
+  renderedQuestion : 'onNext',
+  isNextHidden: 'hideNext'
+})
 
-export default SpecQuestions
+export default SpecQuestionsUncontrollable

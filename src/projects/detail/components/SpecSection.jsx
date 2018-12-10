@@ -1,6 +1,7 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import qs from 'query-string'
+import uncontrollable from 'uncontrollable'
 import Tabs from 'appirio-tech-react-components/components/Tabs/Tabs'
 import Tab from 'appirio-tech-react-components/components/Tabs/Tab'
 import FormsyForm from 'appirio-tech-react-components/components/Formsy'
@@ -71,6 +72,14 @@ const SpecSection = props => {
     description,
     validate,
     sectionNumber,
+    subSectionIdx,
+    wizard,
+    onSubSectionNext,
+    hideSubSectionNext,
+    isLastSubSection,
+    isLastSection,
+    onSectionComplete,
+    projectFormData,
     showHidden,
     isCreation,
     addAttachment,
@@ -79,9 +88,10 @@ const SpecSection = props => {
     attachmentsStorePath,
     canManageAttachments,
   } = props
-
+  console.log(currentSubSection, 'currentSubSection')
   // make a copy to avoid modifying redux store
   const subSections = _.cloneDeep(props.subSections || [])
+  const currentSubSection = !isNaN(subSectionIdx) ? subSectionIdx : 0
 
   // replace string icon values in the "tiled-radio-group" questions with icon components
   subSections.forEach((subSection) => {
@@ -110,8 +120,35 @@ const SpecSection = props => {
       <div className="content-boxs">
         {renderChild(subSection)}
       </div>
+      {wizard && !subSection.wizard && !isLastSubSection && <div className="section-footer section-footer-spec">
+          <button
+            className="tc-btn tc-btn-primary tc-btn-md"
+            type="button"
+            onClick={ renderNextSubSection }
+          >Next Sub Section</button>
+        </div>}
     </div>
   )
+
+  const renderNextSubSection = () => {
+    if (subSections) {
+      if (currentSubSection < subSections.length - 1) {
+        console.log('Moving to next sub section from ' + currentSubSection)
+        onSubSectionNext(currentSubSection + 1)
+        if (currentSubSection + 1 === subSections.length - 1) {
+          hideSubSectionNext(true)
+        }
+      } else { // on last sub section
+        onSectionComplete()
+        hideSubSectionNext(true)
+      }
+    }
+  }
+
+  const handleQuestionsComplete = () => {
+    // hideSubSectionNext(true)
+    renderNextSubSection()
+  }
 
   const onValidate = (isInvalid) => validate(isInvalid)
 
@@ -141,18 +178,10 @@ const SpecSection = props => {
           dirtyProject={dirtyProject}
           isRequired={props.required}
           showHidden={showHidden}
-        />
-      )
-    case 'questions-with-cascade':
-      return (
-        <SpecQuestions
-          showFeaturesDialog={showFeaturesDialog}
-          resetFeatures={resetFeatures}
-          questions={props.questions}
-          project={project}
-          dirtyProject={dirtyProject}
-          isRequired={props.required}
-          showHidden={showHidden}
+          wizard={ props.wizard }
+          // renderedQuestion={0}
+          onQuestionsComplete={handleQuestionsComplete}
+          projectFormData={projectFormData}
         />
       )
     case 'notes':
@@ -341,7 +370,14 @@ const SpecSection = props => {
           (!isCreation || !subSection.hiddenOnCreation) &&
           // hide hidden section, unless we not force to show them
           (showHidden || !subSection.hidden)
-        )).map(renderSubSection)}
+        )).filter((subSection, idx)=> (!wizard || currentSubSection === idx)).map(renderSubSection)}
+        { !isLastSection && (!wizard || isLastSubSection) && <div className="section-footer section-footer-spec">
+          <button
+            className="tc-btn tc-btn-primary tc-btn-md"
+            type="button"
+            onClick={ renderNextSubSection }
+          >Next Section</button>
+        </div>}
       </div>
     </div>
   )
@@ -350,6 +386,10 @@ const SpecSection = props => {
 SpecSection.propTypes = {
   project: PropTypes.object.isRequired,
   sectionNumber: PropTypes.number.isRequired,
+  subSectionIdx: PropTypes.number.isRequired,
+  onSubSectionNext: PropTypes.func,
+  onSectionComplete: PropTypes.func,
+  isLastSection: PropTypes.bool,
   showHidden: PropTypes.bool,
   isCreation: PropTypes.bool,
   addAttachment: PropTypes.func,
@@ -357,4 +397,9 @@ SpecSection.propTypes = {
   removeAttachment: PropTypes.func,
 }
 
-export default scrollToAnchors(SpecSection)
+const SpecSectionUncontrollable = uncontrollable(SpecSection, {
+  subSectionIdx : 'onSubSectionNext',
+  isLastSubSection: 'hideSubSectionNext'
+})
+
+export default scrollToAnchors(SpecSectionUncontrollable)

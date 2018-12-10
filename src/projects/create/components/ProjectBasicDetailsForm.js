@@ -1,11 +1,12 @@
 import _ from 'lodash'
 import React, { Component } from 'react'
 import PropTypes from 'prop-types'
+import update from 'react-addons-update'
 import FormsyForm from 'appirio-tech-react-components/components/Formsy'
 const Formsy = FormsyForm.Formsy
 import './ProjectBasicDetailsForm.scss'
 
-import SpecSectionProjectCreation from '../../detail/components/SpecSectionProjectCreation'
+import SpecSection from '../../detail/components/SpecSection'
 
 class ProjectBasicDetailsForm extends Component {
 
@@ -15,9 +16,12 @@ class ProjectBasicDetailsForm extends Component {
     this.disableButton = this.disableButton.bind(this)
     this.submit = this.submit.bind(this)
     this.handleChange = this.handleChange.bind(this)
-    this.readyToSubmit = this.readyToSubmit.bind(this)
+    // this.readyToSubmit = this.readyToSubmit.bind(this)
+    this.renderNextSection = this.renderNextSection.bind(this)
     this.state = {
       enableSubmit : false,
+      currentSection: 0,
+      isLastSection: false,
       projectFormData : {}
     }
   }
@@ -31,6 +35,7 @@ class ProjectBasicDetailsForm extends Component {
      && _.isEqual(nextState.isSaving, this.state.isSaving)
      && _.isEqual(nextState.enableSubmit, this.state.enableSubmit)
      && _.isEqual(nextState.projectFormData, this.state.projectFormData)
+     && _.isEqual(nextState.currentSection, this.state.currentSection)
     )
   }
 
@@ -72,8 +77,19 @@ class ProjectBasicDetailsForm extends Component {
     this.props.submitHandler(model)
   }
 
-  readyToSubmit() {
-    this.setState({ enableSubmit : true})
+  renderNextSection() {
+    const { template } = this.props
+    const { currentSection } = this.state
+    let newSection = currentSection
+    if (currentSection < template.sections.length - 1) {
+      newSection = currentSection + 1
+      this.setState({
+        currentSection : newSection,
+        isLastSection : newSection === template.sections.length - 1
+      })
+    } else {
+      // do nothing, unless there is only one question to be rendered in the last section
+    }
   }
 
   /**
@@ -86,20 +102,25 @@ class ProjectBasicDetailsForm extends Component {
     // removed check for isChanged argument to fire the PROJECT_DIRTY event for every change in the form
     // this.props.fireProjectDirty(change)
     console.log('change : ', change)
-    this.setState({projectFormData : change})
+    this.setState({projectFormData : update(this.state.projectFormData, { $merge : change })})
     this.props.onProjectChange(change)
   }
 
 
   render() {
-    const { isEditable, sections, submitBtnText } = this.props
-    const { project, canSubmit } = this.state
+    console.log('Rendering ProjectBasicDetailsForm')
+    const { isEditable, template, submitBtnText } = this.props
+    const { project, canSubmit, currentSection, isLastSection } = this.state
+    // const submitButtonText = enableSubmit ? submitBtnText : 'Next Section - A'
+    // const submitButtonType = enableSubmit ? 'submit' : 'button'
+    // const submitOnClick = enableSubmit ? () => {} : this.renderNextSection
     const renderSection = (section, idx) => {
       return (
         <div key={idx} className="ProjectBasicDetailsForm">
           <div className="sections">
-            <SpecSectionProjectCreation
+            <SpecSection
               {...section}
+              // currentSubSection={0}
               project={project}
               sectionNumber={idx + 1}
               showFeaturesDialog={ () => {} }//dummy
@@ -108,15 +129,11 @@ class ProjectBasicDetailsForm extends Component {
               // further, it is not used for this component as we are not rendering spec screen section here
               validate={() => {}}//dummy
               isCreation
-              readyToSubmit={this.readyToSubmit}
+              onSectionComplete={this.renderNextSection}
               projectFormData={this.state.projectFormData}
+              isLastSection={ isLastSection }
             />
           </div>
-          {this.state.enableSubmit && <div className="section-footer section-footer-spec">
-            <button className="tc-btn tc-btn-primary tc-btn-md"
-              type="submit" disabled={(this.state.isSaving) || !canSubmit}
-            >{ submitBtnText }</button>
-          </div>}
         </div>
       )
     }
@@ -131,7 +148,14 @@ class ProjectBasicDetailsForm extends Component {
           onValidSubmit={this.submit}
           onChange={ this.handleChange }
         >
-          {sections.map(renderSection)}
+          { template.wizard ? renderSection(template.sections[currentSection], currentSection) : template.sections.map(renderSection)}
+
+          { (isLastSection || !template.wizard) && <div className="section-footer section-footer-spec">
+            <button className="tc-btn tc-btn-primary tc-btn-md"
+              type='submit'
+              disabled={(this.state.isSaving) || !canSubmit}
+            >{ submitBtnText }</button>
+          </div>}
         </Formsy.Form>
       </div>
     )
@@ -141,7 +165,7 @@ class ProjectBasicDetailsForm extends Component {
 ProjectBasicDetailsForm.propTypes = {
   project: PropTypes.object.isRequired,
   saving: PropTypes.bool.isRequired,
-  sections: PropTypes.arrayOf(PropTypes.object).isRequired,
+  template: PropTypes.object.isRequired,
   isEditable: PropTypes.bool.isRequired,
   submitHandler: PropTypes.func.isRequired
 }
