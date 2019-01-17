@@ -59,7 +59,7 @@ const SpecQuestions = ({
 }) => {
   const currentProjectData = isProjectDirty ? dirtyProject : project
 
-  const renderQ = (q) => {
+  const renderQ = (q, index) => {
     const isReadOnly = _.get(q, '__wizard.readOnly')
     // let child = null
     // const value =
